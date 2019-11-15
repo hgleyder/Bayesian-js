@@ -19,6 +19,8 @@ class NaiveBayes {
       this.probabilities = model.probabilities;
       this.classes = model.classes;
     }
+
+    this.name = 'NaiveBayes';
   }
 
   fit(trainingSet, trainingLabels) {
@@ -32,12 +34,12 @@ class NaiveBayes {
     const classList = (0, _evaluation.getClassesList)(trainingLabels);
     let Probabilities = {}; // Initialize probabilities for each attribute
 
-    trainingSet[0].map((x, ind) => {
+    trainingSet.to2DArray()[0].map((x, ind) => {
       Probabilities[ind] = {};
     }); // Initialize probabilities for each attribute value
 
-    for (let index = 0; index < trainingSet[0].length; index++) {
-      trainingSet.map(instance => {
+    for (let index = 0; index < trainingSet.to2DArray()[0].length; index++) {
+      trainingSet.to2DArray().map(instance => {
         const aux = {};
         classList.map(c => {
           aux[c] = 0;
@@ -54,7 +56,7 @@ class NaiveBayes {
         Object.keys(AuxClasses).map(classAux => {
           const auxClassList = classList.map(c => c.toString());
           const classIndex = auxClassList.indexOf(classAux);
-          const relevant = instancesByClass[classIndex].filter(instance => instance[parseInt(attribute)] === value);
+          const relevant = instancesByClass[classIndex].to2DArray().filter(instance => instance[parseInt(attribute)] === parseInt(value));
           Probabilities[attribute][value][classAux] = relevant.length; // Laplace +1 to every count
 
           Probabilities[attribute][value][classAux] += 1;
@@ -106,7 +108,7 @@ class NaiveBayes {
         predClass = maxProb < probabilitiesByClass[c] ? ind : predClass;
         maxProb = maxProb < probabilitiesByClass[c] ? probabilitiesByClass[c] : maxProb;
       });
-      predictions[pIndex] = predClass;
+      predictions[pIndex] = this.classes[predClass];
     }
 
     return predictions;

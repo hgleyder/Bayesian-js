@@ -11,6 +11,7 @@ export class MultinomialNB {
 			this.priorProbability = Matrix.checkMatrix(model.priorProbability);
 			this.classes = model.classes;
 		}
+		this.name = 'MultinomialNB';
 	}
 
 	fit(trainingSet, trainingLabels) {
@@ -26,10 +27,11 @@ export class MultinomialNB {
 		this.priorProbability = new Matrix(separateClass.length, 1);
 
 		for (var i = 0; i < separateClass.length; ++i) {
-			this.priorProbability[i][0] = Math.log10(
-				separateClass[i].length / trainingSet.rows,
-			);
+			this.priorProbability.set(i, 0, Math.log10(
+				separateClass[i].rows / trainingSet.rows,
+			));
 		}
+
 
 		var features = trainingSet.columns;
 		this.conditionalProbability = new Matrix(
@@ -42,7 +44,7 @@ export class MultinomialNB {
 			var divisor = total + features;
 			this.conditionalProbability.setRow(
 				i,
-				classValues.sum('column').add(1).div(divisor).apply(matrixLog),
+				new Matrix([classValues.sum('column')]).add(1).div(divisor).apply(matrixLog),
 			);
 		}
 
@@ -54,12 +56,13 @@ export class MultinomialNB {
 		var predictions = new Array(dataset.rows);
 		for (var i = 0; i < dataset.rows; ++i) {
 			var currentElement = dataset.getRowVector(i);
-			predictions[i] = this.conditionalProbability
+			predictions[i] = this.classes[new Matrix([this.conditionalProbability
 				.clone()
 				.mulRowVector(currentElement)
-				.sum('row')
+				.sum('row')])
+				.transpose()
 				.add(this.priorProbability)
-				.maxIndex()[0];
+				.maxIndex()[0]];
 		}
 
 		return predictions;
@@ -70,10 +73,11 @@ export class MultinomialNB {
 		var predictions = new Array(dataset.rows);
 		for (var i = 0; i < dataset.rows; ++i) {
 			var currentElement = dataset.getRowVector(i);
-			predictions[i] = this.conditionalProbability
+			predictions[i] = new Matrix(this.conditionalProbability
 				.clone()
 				.mulRowVector(currentElement)
-				.sum('row')
+				.sum('row'))
+				.transpose()
 				.add(this.priorProbability);
 		}
 
@@ -101,5 +105,5 @@ export class MultinomialNB {
 }
 
 function matrixLog(i, j) {
-	this[i][j] = Math.log10(this[i][j]);
+	this.set(i, j, Math.log10(this.get(i,j)));
 }

@@ -11,7 +11,7 @@ export function loadModelFromImportedData(data) {
 	let model;
 	if (data.name === 'NaiveBayes') model = new NaiveBayes(data);
 	if (data.name === 'MultinomialNB') model = new MultinomialNB(data);
-	if (data.name === 'GaussianNB') model = new GaussianNB(data);
+	if (data.name === 'GaussianNB') model = new GaussianNB(true, data);
 	if (data.name === 'BernoulliNB') model = new BernoulliNB(data);
 	return model;
 }

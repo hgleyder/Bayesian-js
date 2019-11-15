@@ -32,12 +32,22 @@ function getValuesByClasses(instances, labels) {
   }
 
   const classesList = Object.keys(totalPerClasses);
+  const aux = new Array(classesList.length);
+
+  for (let index = 0; index < classesList.length; index++) {
+    aux[index] = [];
+  }
 
   for (i = 0; i < instances.rows; i++) {
     const auxIndex = classesList.indexOf(labels[i].toString());
-    separatedClasses[auxIndex][currentIndex[auxIndex]] = instances[i.toString()];
+    aux[auxIndex].push(instances.to2DArray()[i]);
+    separatedClasses[auxIndex].set([currentIndex[auxIndex]], instances.to2DArray()[i]);
     currentIndex[auxIndex]++;
   }
 
-  return separatedClasses;
+  for (let index = 0; index < classesList.length; index++) {
+    aux[index] = new _mlMatrix.default(aux[index]);
+  }
+
+  return aux;
 }

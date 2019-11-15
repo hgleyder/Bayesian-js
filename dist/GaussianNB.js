@@ -22,6 +22,8 @@ class GaussianNB {
       this.jointProbabilities = model.jointProbabilities;
       this.classes = model.classes;
     }
+
+    this.name = 'GaussianNB';
   }
 
   fit(trainingSet, trainingLabels) {
@@ -36,7 +38,7 @@ class GaussianNB {
     this.means = new Array(separatedClasses.length);
 
     for (var i = 0; i < separatedClasses.length; ++i) {
-      var means = _mlStat.default.matrix.mean(separatedClasses[i]);
+      var means = _mlStat.default.matrix.mean(separatedClasses[i].to2DArray());
 
       var std = calculateStandardDesviations(means, separatedClasses[i]);
       var logPriorProbability = Math.log10(separatedClasses[i].rows / trainingSet.rows);
@@ -63,7 +65,7 @@ class GaussianNB {
     var predictions = new Array(dataset.length);
 
     for (var i = 0; i < predictions.length; ++i) {
-      predictions[i] = getCurrentClass(dataset[i], this.means, this.jointProbabilities);
+      predictions[i] = this.classes[getCurrentClass(dataset[i], this.means, this.jointProbabilities)];
     }
 
     return predictions;
@@ -126,11 +128,11 @@ function calculateStandardDesviations(means, values) {
   for (let i = 0; i < means.length; i++) {
     value = 0;
 
-    for (let j = 0; j < values.length; j++) {
-      value += Math.pow(Math.abs(values[j][i] - means[i]), 2);
+    for (let j = 0; j < values.rows; j++) {
+      value += Math.pow(Math.abs(values.get(j, i) - means[i]), 2);
     }
 
-    value = value / values.length;
+    value = value / values.rows;
     std.push(value);
   }
 

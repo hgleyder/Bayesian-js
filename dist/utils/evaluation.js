@@ -4,6 +4,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.crossValidationModel = crossValidationModel;
+exports.getMetricsFromPredictions = getMetricsFromPredictions;
 exports.crossValidationModelSpam = crossValidationModelSpam;
 exports.getClassesList = getClassesList;
 exports.getGeneralAccuracy = getGeneralAccuracy;
@@ -44,6 +45,35 @@ function crossValidationModel(classificationModel, X, y, folds = 10) {
       counter++;
     }
 
+    const metrics = {};
+    const classList = getClassesList(y);
+    metrics['generalAccuracy'] = getGeneralAccuracy(clasificationResults);
+    metrics['precisionByClasses'] = {};
+    metrics['recallByClasses'] = {};
+    metrics['fMeasureByClasses'] = {};
+    metrics['confusionMatrixByClasses'] = {};
+    classList.map(c => {
+      metrics['precisionByClasses'][c.toString()] = getClassPrecision(clasificationResults, c);
+      metrics['recallByClasses'][c.toString()] = getClassRecall(clasificationResults, c);
+      metrics['fMeasureByClasses'][c.toString()] = calculateFMeasure(getClassPrecision(clasificationResults, c), getClassRecall(clasificationResults, c));
+      metrics['confusionMatrixByClasses'][c.toString()] = getClassConfusionMatrix(clasificationResults, c, classList);
+    });
+    return metrics;
+  } catch (e) {
+    throw new Error('Incorrect type of data for this model');
+  }
+}
+
+function getMetricsFromPredictions(y, yPredict) {
+  try {
+    const clasificationResults = [];
+    yPredict.map((prediction, i) => {
+      clasificationResults.push({
+        prediction,
+        expected: y[i][0]
+      });
+    });
+    console.log(clasificationResults);
     const metrics = {};
     const classList = getClassesList(y);
     metrics['generalAccuracy'] = getGeneralAccuracy(clasificationResults);

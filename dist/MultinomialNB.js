@@ -20,6 +20,8 @@ class MultinomialNB {
       this.priorProbability = _mlMatrix.default.checkMatrix(model.priorProbability);
       this.classes = model.classes;
     }
+
+    this.name = 'MultinomialNB';
   }
 
   fit(trainingSet, trainingLabels) {
@@ -33,7 +35,7 @@ class MultinomialNB {
     this.priorProbability = new _mlMatrix.default(separateClass.length, 1);
 
     for (var i = 0; i < separateClass.length; ++i) {
-      this.priorProbability[i][0] = Math.log10(separateClass[i].length / trainingSet.rows);
+      this.priorProbability.set(i, 0, Math.log10(separateClass[i].rows / trainingSet.rows));
     }
 
     var features = trainingSet.columns;
@@ -44,7 +46,7 @@ class MultinomialNB {
 
       var total = classValues.sum();
       var divisor = total + features;
-      this.conditionalProbability.setRow(i, classValues.sum('column').add(1).div(divisor).apply(matrixLog));
+      this.conditionalProbability.setRow(i, new _mlMatrix.default([classValues.sum('column')]).add(1).div(divisor).apply(matrixLog));
     }
 
     this.classes = (0, _evaluation.getClassesList)(trainingLabels);
@@ -56,7 +58,7 @@ class MultinomialNB {
 
     for (var i = 0; i < dataset.rows; ++i) {
       var currentElement = dataset.getRowVector(i);
-      predictions[i] = this.conditionalProbability.clone().mulRowVector(currentElement).sum('row').add(this.priorProbability).maxIndex()[0];
+      predictions[i] = this.classes[new _mlMatrix.default([this.conditionalProbability.clone().mulRowVector(currentElement).sum('row')]).transpose().add(this.priorProbability).maxIndex()[0]];
     }
 
     return predictions;
@@ -68,7 +70,7 @@ class MultinomialNB {
 
     for (var i = 0; i < dataset.rows; ++i) {
       var currentElement = dataset.getRowVector(i);
-      predictions[i] = this.conditionalProbability.clone().mulRowVector(currentElement).sum('row').add(this.priorProbability);
+      predictions[i] = new _mlMatrix.default(this.conditionalProbability.clone().mulRowVector(currentElement).sum('row')).transpose().add(this.priorProbability);
     }
 
     return predictions;
@@ -96,5 +98,5 @@ class MultinomialNB {
 exports.MultinomialNB = MultinomialNB;
 
 function matrixLog(i, j) {
-  this[i][j] = Math.log10(this[i][j]);
+  this.set(i, j, Math.log10(this.get(i, j)));
 }

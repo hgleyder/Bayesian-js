@@ -19,7 +19,7 @@ function loadModelFromImportedData(data) {
   let model;
   if (data.name === 'NaiveBayes') model = new _index.NaiveBayes(data);
   if (data.name === 'MultinomialNB') model = new _index.MultinomialNB(data);
-  if (data.name === 'GaussianNB') model = new _index.GaussianNB(data);
+  if (data.name === 'GaussianNB') model = new _index.GaussianNB(true, data);
   if (data.name === 'BernoulliNB') model = new _index.BernoulliNB(data);
   return model;
 }

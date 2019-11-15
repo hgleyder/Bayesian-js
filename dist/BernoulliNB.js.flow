@@ -12,6 +12,7 @@ export class BernoulliNB {
 			this.priorProbability = Matrix.checkMatrix(model.priorProbability);
 			this.classes = model.classes;
 		}
+		this.name = 'BernoulliNB';
 	}
 
 	fit(trainingSet, trainingLabels) {
@@ -24,7 +25,7 @@ export class BernoulliNB {
 		}
 
 		// inspect if there is at least an string attribute
-		const stringAttr = trainingSet[0].find(
+		const stringAttr = trainingSet.to2DArray()[0].find(
 			(attr) => typeof attr === 'string' || attr instanceof String,
 		);
 
@@ -32,20 +33,22 @@ export class BernoulliNB {
 			throw new RangeError('the attributes should be numeric');
 		}
 
-		let auxTraniningSet = trainingSet;
+		// converting values to 0 and 1
+		let auxTraniningSet = trainingSet.to2DArray();
 		auxTraniningSet.map((instance, ind) => {
 			auxTraniningSet[ind].map((attr, ind2) => {
 				auxTraniningSet[ind][ind2] = attr > 0 ? 1 : 0;
 			});
 		});
 
+
 		var separateClass = getValuesByClasses(trainingSet, trainingLabels);
 		this.priorProbability = new Matrix(separateClass.length, 1);
 
 		for (var i = 0; i < separateClass.length; ++i) {
-			this.priorProbability[i][0] = Math.log10(
-				separateClass[i].length / trainingSet.rows,
-			);
+			this.priorProbability.set(i, 0, Math.log10(
+				separateClass[i].rows / trainingSet.rows,
+			));
 		}
 
 		var features = trainingSet.columns;
@@ -59,7 +62,7 @@ export class BernoulliNB {
 			var divisor = total + features;
 			this.conditionalProbability.setRow(
 				i,
-				classValues.sum('column').add(2).div(divisor),
+				new Matrix([classValues.sum('column')]).add(2).div(divisor),
 			);
 		}
 
@@ -68,47 +71,50 @@ export class BernoulliNB {
 
 	predict(dataset) {
 		dataset = Matrix.checkMatrix(dataset);
-		let auxDataset = dataset;
+		let auxDataset = dataset.to2DArray();
 		auxDataset.map((instance, ind) => {
 			auxDataset[ind].map((attr, ind2) => {
 				auxDataset[ind][ind2] = attr > 0 ? 1 : 0;
 			});
 		});
+		auxDataset = new Matrix(auxDataset)
 		var predictions = new Array(auxDataset.rows);
 		for (var i = 0; i < auxDataset.rows; ++i) {
 			var currentElement = auxDataset.getRowVector(i);
 
 			let auxProb = [];
-			for (let i = 0; i < this.conditionalProbability.length; i++) {
+			for (let i = 0; i < this.conditionalProbability.rows; i++) {
 				auxProb.push([]);
 				for (
 					let j = 0;
-					j < this.conditionalProbability[i].length;
+					j < this.conditionalProbability.columns;
 					j++
 				) {
-					auxProb[i].push(1 - this.conditionalProbability[i][j]);
+					auxProb[i].push(1 - this.conditionalProbability.get(i,j));
 				}
 			}
 			auxProb = new Matrix(auxProb);
 
 			var inverseCurrent = [];
-			for (let index = 0; index < currentElement[0].length; index++) {
-				let val = currentElement[0][index];
+			for (let index = 0; index < currentElement.columns; index++) {
 				inverseCurrent.push(
-					Math.abs(parseInt(currentElement[0][index]) - 1),
+					Math.abs(parseInt(currentElement.get(0,index)) - 1),
 				);
 			}
 			inverseCurrent = new Matrix([ inverseCurrent ]);
 
-			predictions[i] = this.conditionalProbability
+			predictions[i] = this.classes[new Matrix([this.conditionalProbability
 				.clone()
 				.apply(matrixLog)
 				.mulRowVector(currentElement)
-				.add(auxProb.apply(matrixLog).mulRowVector(inverseCurrent))
-				.sum('row')
+				.add(auxProb.apply(matrixLog)
+				.mulRowVector(inverseCurrent))
+				.sum('row')])
+				.transpose()
 				.add(this.priorProbability)
-				.maxIndex()[0];
+				.maxIndex()[0]];
 		}
+
 
 		return predictions;
 	}
@@ -134,5 +140,5 @@ export class BernoulliNB {
 }
 
 function matrixLog(i, j) {
-	this[i][j] = Math.log10(this[i][j]);
+	this.set(i, j, Math.log10(this.get(i,j)));
 }
